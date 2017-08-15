@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Jordan Anderson</authors>
+    <owners>Jordan Anderson</owners>
+    <licenseUrl>https://github.com/Supercide/Encryption.Hybrid/blob/master/LICENSE.md</licenseUrl>
+    <projectUrl>https://github.com/Supercide/Encryption.Hybrid</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Encryption utillity package. Helps encrypt things</description>
+    <releaseNotes>na</releaseNotes>
+    <copyright>Copyright 2017</copyright>
+    <tags>RSA Asymmetric Encryption</tags>
+  </metadata>
+</package>
