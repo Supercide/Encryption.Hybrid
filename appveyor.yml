@@ -21,7 +21,7 @@
 
   on_failure:
     - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"    
-
+    
   on_success:
     - ps: git config --global credential.helper store
     - ps: git config --global user.email "$($env:Git_Email)"
@@ -51,12 +51,3 @@
     - ps: .\build.ps1
  
   os: Visual Studio 2017
-
-  on_success:
-    - ps: $wc = New-Object 'System.Net.WebClient'
-    - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
-
-  on_failure:
-    - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"    
-    - ps: $wc = New-Object 'System.Net.WebClient'
-    - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
