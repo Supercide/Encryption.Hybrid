@@ -87,7 +87,7 @@ Task("Pack")
     .IsDependentOn("Test")
     .Does(() =>
     {
-		var nuspecFiles = GetFiles("*/**/*.csproj");
+		var nuspecFiles = GetFiles("*/**/*.nuspec");
         
         var nuGetPackSettings = new NuGetPackSettings {
                                     Symbols                 = false,
@@ -98,7 +98,9 @@ Task("Pack")
 
         foreach(var nuspecFile in nuspecFiles)
         {
-            NuGetPack(nuspecFile.FullPath, nuGetPackSettings);
+			var path = nuspecFile.FullPath.Split('.');
+			path[path.Length-1] = "csproj";
+            NuGetPack(string.Join(".", path), nuGetPackSettings);
         }
     });
 
