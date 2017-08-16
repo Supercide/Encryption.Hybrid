@@ -43,8 +43,24 @@
     <Compile Include="..\..\SolutionInfo.cs">
       <Link>SolutionInfo.cs</Link>
     </Compile>
-    <Compile Include="HelloWorldMessage.cs" />
+    <Compile Include="Asymmetric\IAsymmetricKeyEncryption.cs" />
+    <Compile Include="IDigitalSignature.cs" />
+    <Compile Include="Asymmetric\RSAContainerFactory.cs" />
+    <Compile Include="Asymmetric\RSAEncryption.cs" />
+    <Compile Include="Constants\WellKnownPaths.cs" />
+    <Compile Include="SessionKeyContainer.cs" />
+    <Compile Include="Hybrid\HybridDecryption.cs" />
+    <Compile Include="Hybrid\HybridEncryption.cs" />
+    <Compile Include="Hybrid\IHybridDecryption.cs" />
+    <Compile Include="Hybrid\IHybridEncryption.cs" />
+    <Compile Include="NumberGenerators\IGenerateRandomBytes.cs" />
+    <Compile Include="NumberGenerators\RNGCryptoRandomBytesGenerator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Symmetric\AESEncryption.cs" />
+    <Compile Include="Symmetric\ISymmetricKeyEncryption.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Encryption.Hybrid.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
