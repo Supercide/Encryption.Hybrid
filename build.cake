@@ -87,7 +87,7 @@ Task("Pack")
     .IsDependentOn("Test")
     .Does(() =>
     {
-		var nuspecFiles = GetFiles("*/**/*.csproj");
+		var nuspecFiles = GetFiles("*/**/*.nuspec");
         
         var nuGetPackSettings = new NuGetPackSettings {
                                     Symbols                 = false,
@@ -98,11 +98,31 @@ Task("Pack")
 
         foreach(var nuspecFile in nuspecFiles)
         {
-            NuGetPack(nuspecFile.FullPath, nuGetPackSettings);
+			var path = nuspecFile.FullPath.Split('.');
+			path[path.Length-1] = "csproj";
+            NuGetPack(string.Join(".", path), nuGetPackSettings);
         }
     });
 
+Task("Push")
+    .IsDependentOn("Pack")
+    .Does(() =>
+    {
+	     if(EnvironmentVariable("NUGET_API") == null) return;
+		 // Get the path to the package.
+		 var packageFiles = GetFiles("./nuget/*.nupkg");
+
+		 foreach(var package in packageFiles)
+         {
+            // Push the package.
+            NuGetPush(package, new NuGetPushSettings {
+                Source = "https://www.nuget.org/api/v2/package",
+                ApiKey = EnvironmentVariable("NUGET_API") 
+            });
+         }
+    });
+
 Task("Default")
-    .IsDependentOn("Pack");
+    .IsDependentOn("Push");
 
 RunTarget(target);

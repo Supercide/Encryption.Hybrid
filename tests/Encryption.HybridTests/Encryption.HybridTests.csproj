@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{9A6698FA-B465-4450-ADFA-808AD2D9C82D}</ProjectGuid>
+    <ProjectGuid>{8BD0CD2A-BA6E-40CC-A38C-564DE386B79F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Encryption.Hybrid</RootNamespace>
-    <AssemblyName>Encryption.Hybrid</AssemblyName>
+    <RootNamespace>Encryption.HybridTests</RootNamespace>
+    <AssemblyName>Encryption.HybridTests</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -30,6 +30,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="nunit.framework, Version=3.7.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\NUnit.3.7.1\lib\net45\nunit.framework.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -40,27 +43,23 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="..\..\SolutionInfo.cs">
-      <Link>SolutionInfo.cs</Link>
-    </Compile>
-    <Compile Include="Asymmetric\IAsymmetricKeyEncryption.cs" />
-    <Compile Include="IDigitalSignature.cs" />
-    <Compile Include="Asymmetric\RSAContainerFactory.cs" />
-    <Compile Include="Asymmetric\RSAEncryption.cs" />
-    <Compile Include="Constants\WellKnownPaths.cs" />
-    <Compile Include="SessionKeyContainer.cs" />
-    <Compile Include="Hybrid\HybridDecryption.cs" />
-    <Compile Include="Hybrid\HybridEncryption.cs" />
-    <Compile Include="Hybrid\IHybridDecryption.cs" />
-    <Compile Include="Hybrid\IHybridEncryption.cs" />
-    <Compile Include="NumberGenerators\IGenerateRandomBytes.cs" />
-    <Compile Include="NumberGenerators\RNGCryptoRandomBytesGenerator.cs" />
+    <Compile Include="Encryption\HybridEncryptTests\WhenDecryptingData.cs" />
+    <Compile Include="Encryption\HybridEncryptTests\WhenEncryptingData.cs" />
+    <Compile Include="Encryption\HybridEncryptTests\WhenImportingKey.cs" />
+    <Compile Include="Encryption\RSAEncryptionTests\RSAEncryptionTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Symmetric\AESEncryption.cs" />
-    <Compile Include="Symmetric\ISymmetricKeyEncryption.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Encryption.Hybrid.nuspec" />
+    <ProjectReference Include="..\..\src\Encryption.Hybrid\Encryption.Hybrid.csproj">
+      <Project>{9A6698FA-B465-4450-ADFA-808AD2D9C82D}</Project>
+      <Name>Encryption.Hybrid</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
