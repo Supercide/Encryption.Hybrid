@@ -75,7 +75,6 @@
       secure: WPva4EB+YwQeG306yJc4hRBe99TMEJxIYf11r4kbtUkUd4F5h2J1odheapRyiwYI
     skip_symbols: true
     artifact: /.*\.nupkg/
-    artifact: /.*\.nupkg/
 
   on_success:
     - ps: $wc = New-Object 'System.Net.WebClient'
