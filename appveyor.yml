@@ -19,6 +19,9 @@
     - ps: $env:BUILD_VERSION = $env:appveyor_build_version
     - ps: .\build.ps1
 
+  artifacts:
+  - path: '**\*.nupkg'
+
   deploy:
     provider: NuGet
     api_key:
@@ -62,12 +65,16 @@
     - ps: .\build.ps1
  
   os: Visual Studio 2017
+ 
+  artifacts:
+  - path: '**\*.nupkg'
 
   deploy:
     provider: NuGet
     api_key:
       secure: WPva4EB+YwQeG306yJc4hRBe99TMEJxIYf11r4kbtUkUd4F5h2J1odheapRyiwYI
     skip_symbols: true
+    artifact: /.*\.nupkg/
     artifact: /.*\.nupkg/
 
   on_success:
