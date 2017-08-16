@@ -24,8 +24,7 @@
 
   deploy:
     provider: NuGet
-    api_key:
-      secure: WPva4EB+YwQeG306yJc4hRBe99TMEJxIYf11r4kbtUkUd4F5h2J1odheapRyiwYI
+    api_key: api_key: $env:NUGET_API      
     skip_symbols: true
     artifact: /.*\.nupkg/
 
@@ -71,8 +70,7 @@
 
   deploy:
     provider: NuGet
-    api_key:
-      secure: WPva4EB+YwQeG306yJc4hRBe99TMEJxIYf11r4kbtUkUd4F5h2J1odheapRyiwYI
+    api_key: $env:NUGET_API
     skip_symbols: true
     artifact: /.*\.nupkg/
 

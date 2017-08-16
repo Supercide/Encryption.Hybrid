@@ -102,7 +102,25 @@ Task("Pack")
         }
     });
 
+Task("Push")
+    .IsDependentOn("Pack")
+    .Does(() =>
+    {
+	     if(EnvironmentVariable("NUGET_API") == null) return;
+		 // Get the path to the package.
+		 var packageFiles = GetFiles("./nuget/*.nupkg");
+
+		 foreach(var package in packageFiles)
+         {
+            // Push the package.
+            NuGetPush(package, new NuGetPushSettings {
+                Source = "https://www.nuget.org/api/v2/package",
+                ApiKey = EnvironmentVariable("NUGET_API") 
+            });
+         }
+    });
+
 Task("Default")
-    .IsDependentOn("Pack");
+    .IsDependentOn("Push");
 
 RunTarget(target);
