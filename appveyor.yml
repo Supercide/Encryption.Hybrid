@@ -19,6 +19,13 @@
     - ps: $env:BUILD_VERSION = $env:appveyor_build_version
     - ps: .\build.ps1
 
+  deploy:
+    provider: NuGet
+    api_key:
+      secure: WPva4EB+YwQeG306yJc4hRBe99TMEJxIYf11r4kbtUkUd4F5h2J1odheapRyiwYI
+    skip_symbols: true
+    artifact: /.*\.nupkg/
+
   on_failure:
     - ps: $wc = New-Object 'System.Net.WebClient'
     - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
@@ -56,9 +63,23 @@
  
   os: Visual Studio 2017
 
+  deploy:
+    provider: NuGet
+    api_key:
+      secure: WPva4EB+YwQeG306yJc4hRBe99TMEJxIYf11r4kbtUkUd4F5h2J1odheapRyiwYI
+    skip_symbols: true
+    artifact: /.*\.nupkg/
+
   on_success:
     - ps: $wc = New-Object 'System.Net.WebClient'
     - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+
+  deploy:
+    provider: NuGet
+    api_key:
+      secure: WPva4EB+YwQeG306yJc4hRBe99TMEJxIYf11r4kbtUkUd4F5h2J1odheapRyiwYI
+    skip_symbols: true
+    artifact: /.*\.nupkg/
 
   on_failure:
     - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"    
