@@ -15,7 +15,7 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
             var currentUser = WindowsIdentity.GetCurrent()
                                              .Name;
 
-            var target = RSAEncryption.LoadSecureContainer("target", currentUser);
+            var target = RSAEncryption.LoadSecureContainer(new RSAContainer("target"), currentUser);
             var signatureContainer = RSAEncryption.LoadSecureContainer("signatureContainer", currentUser);
             var signaturePublicKey = signatureContainer.ExportKeyToXML(false);
             var targetPublicKey = target.ExportKeyToXML(false);

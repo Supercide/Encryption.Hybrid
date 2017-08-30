@@ -1,4 +1,5 @@
 using System.Security.Cryptography;
+using Encryption.Hybrid.Hybrid;
 
 namespace Encryption.Hybrid.Asymmetric {
     /// <summary>
@@ -6,7 +7,7 @@ namespace Encryption.Hybrid.Asymmetric {
     /// </summary>
     public class RSAEncryption : IAsymmetricKeyEncryption, IDigitalSignature
     {
-        private readonly string _containerName;
+        private readonly RSAContainer _container;
         private readonly string _username;
         private string _publicKey;
         
@@ -16,47 +17,47 @@ namespace Encryption.Hybrid.Asymmetric {
         /// <summary>
         /// Initializes class from existing container
         /// </summary>
-        /// <param name="containerName"></param>
-        protected RSAEncryption(string containerName)
+        /// <param name="container"></param>
+        protected RSAEncryption(RSAContainer container)
         {
-            _containerName = containerName;
+            _container = container;
         }
 
         /// <summary>
         /// Creates or loads an container applying NTFS access rules for the provided user identity
         /// </summary>
-        /// <param name="containerName"></param>
+        /// <param name="container"></param>
         /// <param name="username">NT Identity of users container is restricted too</param>
         /// <returns><see cref="RSAEncryption"/></returns>
-        protected RSAEncryption(string containerName, string username)
+        protected RSAEncryption(RSAContainer container, string username)
         {
-            _containerName = containerName;
+            _container = container;
             _username = username;
 
-            RSAContainerFactory.Create(containerName, username)
+            RSAContainerFactory.Create(container.Name, username)
                                .Dispose();
         }
 
         /// <summary>
         /// Creates or loads an container applying NTFS access rules for the provided user identity
         /// </summary>
-        /// <param name="containerName"></param>
+        /// <param name="container"></param>
         /// <param name="username">NT Identity of users container is restricted too</param>
         /// <returns><see cref="RSAEncryption"/></returns>
-        public static RSAEncryption LoadSecureContainer(string containerName, string username)
+        public static RSAEncryption LoadSecureContainer(RSAContainer container, string username)
         {
             // throw exception if container already exists
-            return new RSAEncryption(containerName, username);
+            return new RSAEncryption(container, username);
         }
 
         /// <summary>
         /// Initializes class from existing container or creates a new container if none exists
         /// </summary>
-        /// <param name="containerName">Name container</param>
+        /// <param name="container">Name container</param>
         /// <returns><see cref="RSAEncryption"/></returns>
-        public static RSAEncryption LoadContainer(string containerName)
+        public static RSAEncryption LoadContainer(RSAContainer container)
         {
-            return new RSAEncryption(containerName);
+            return new RSAEncryption(container);
         }
 
         /// <summary>
@@ -79,7 +80,7 @@ namespace Encryption.Hybrid.Asymmetric {
         /// <returns>key in xml format</returns>
         public string ExportKeyToXML(bool includePrivate)
         {
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_containerName))
+            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_container.Name))
             {
                 return rsaCryptoServiceProvider.ToXmlString(includePrivate);
             }
@@ -94,7 +95,7 @@ namespace Encryption.Hybrid.Asymmetric {
         {
             if(_publicKey == null)
             {
-                using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.Create(_containerName, _username))
+                using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.Create(_container.Name, _username))
                 {
                     return rsaCryptoServiceProvider.Encrypt(data, RSAEncryptionPadding.Pkcs1);
                 }
@@ -112,7 +113,7 @@ namespace Encryption.Hybrid.Asymmetric {
         /// <returns>unencrypted data in bytes</returns>
         public byte[] DecryptData(byte[] data)
         {
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_containerName))
+            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_container.Name))
             {
                 return rsaCryptoServiceProvider.Decrypt(data, RSAEncryptionPadding.Pkcs1);
             }
@@ -124,7 +125,7 @@ namespace Encryption.Hybrid.Asymmetric {
         /// <returns>signature of data</returns>
         public byte[] SignData(byte[] data)
         {
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_containerName))
+            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_container.Name))
             {
                 return rsaCryptoServiceProvider.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             }

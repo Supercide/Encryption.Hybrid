@@ -42,9 +42,9 @@ namespace Encryption.Hybrid.Hybrid {
             return decryptedData;
         }
 
-        public static HybridDecryption CreateDecryption(string decryptionContainerName, string signiturePublicKey)
+        public static HybridDecryption CreateDecryption(RSAContainer container, string signiturePublicKey)
         {
-            return new HybridDecryption(RSAEncryption.LoadContainer(decryptionContainerName), 
+            return new HybridDecryption(RSAEncryption.LoadContainer(container), 
                                         new AESEncryption(), 
                                         RSAEncryption.FromPublicKey(signiturePublicKey));
         }

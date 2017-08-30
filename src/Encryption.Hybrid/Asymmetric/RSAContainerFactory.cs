@@ -7,11 +7,11 @@ using Encryption.Hybrid.Constants;
 namespace Encryption.Hybrid.Asymmetric {
     internal class RSAContainerFactory
     {
-        public static RSACryptoServiceProvider Create(string containerName, string username)
+        public static RSACryptoServiceProvider Create(string containerName, string username, int keySize = 2048)
         {
             var cspParams = CreateCspParameters(containerName);
 
-            RSACryptoServiceProvider rsaProvider = new RSACryptoServiceProvider(2048, cspParams)
+            RSACryptoServiceProvider rsaProvider = new RSACryptoServiceProvider(keySize, cspParams)
             {
                 PersistKeyInCsp = true
             };
