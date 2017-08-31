@@ -37,7 +37,7 @@ namespace Encryption.Hybrid.Hybrid {
             return (new SessionKeyContainer(encryptedSessionKey, Iv, hmacHash, signature), encryptedData);
         }
 
-        public static HybridEncryption CreateEncryption(string publicKey, RSAContainer signatureContainer)
+        public static HybridEncryption Create(string publicKey, RSAContainer signatureContainer)
         {
             return new HybridEncryption(RSAEncryption.FromPublicKey(publicKey),
                                         new AESEncryption(), 

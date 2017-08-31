@@ -10,23 +10,32 @@ using NUnit.Framework;
 namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
     public class WhenImportingKey
     {
+        private HybridEncryption _hybridEncryption;
+        private HybridDecryption _hybridDecryption;
+
         public WhenImportingKey()
         {
             Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
+            var currentUser = WindowsIdentity.GetCurrent()
+                                             .Name;
+
+            var signatureContainer = new RSAContainer("signature");
+            var encryptionContainer = new RSAContainer("encryption");
+
+            var encryptionKey = RSAEncryption.LoadSecureContainer(encryptionContainer, currentUser);
+            var signingKey = RSAEncryption.LoadSecureContainer(signatureContainer, currentUser);
+
+            var signaturePublicKey = signingKey.ExportKeyToXML(false);
+            var encryptionPublicKey = encryptionKey.ExportKeyToXML(false);
+
+            _hybridEncryption = HybridEncryption.Create(encryptionPublicKey, signatureContainer);
+            _hybridDecryption = HybridDecryption.Create(encryptionContainer, signaturePublicKey);
         }
 
         [Test]
         public void GivenEncryptionKeyBlob_WhenImportingKey_ThenImportsIVCorrectly()
         {
-            var currentUser = WindowsIdentity.GetCurrent()
-                                             .Name;
-
-            var target = RSAEncryption.LoadSecureContainer("target", currentUser);
-            RSAEncryption.LoadSecureContainer("signatureContainer", currentUser);
-            var targetPublicKey = target.ExportKeyToXML(false);
-
-            HybridEncryption hybridEncryption = HybridEncryption.CreateEncryption(targetPublicKey, "signatureContainer");
-
             RandomNumberGenerator random = new RNGCryptoServiceProvider();
 
             var data = File.ReadAllBytes("appsettings.json");
@@ -36,7 +45,7 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             random.GetBytes(sessionKey);
             random.GetBytes(iv);
 
-            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = hybridEncryption.EncryptData(sessionKey, data, iv);
+            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = _hybridEncryption.EncryptData(sessionKey, data, iv);
 
             var key = encryptedResult.key;
 
@@ -50,15 +59,6 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
         [Test]
         public void GivenEncryptionKeyBlob_WhenImportingKey_ThenImportsHMACHashCorrectly()
         {
-            var currentUser = WindowsIdentity.GetCurrent()
-                                             .Name;
-
-            var target = RSAEncryption.LoadSecureContainer("target", currentUser);
-            RSAEncryption.LoadSecureContainer("signatureContainer", currentUser);
-            var targetPublicKey = target.ExportKeyToXML(false);
-
-            HybridEncryption hybridEncryption = HybridEncryption.CreateEncryption(targetPublicKey, "signatureContainer");
-
             RandomNumberGenerator random = new RNGCryptoServiceProvider();
 
             var data =File.ReadAllBytes("appsettings.json");
@@ -68,7 +68,7 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             random.GetBytes(sessionKey);
             random.GetBytes(iv);
 
-            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = hybridEncryption.EncryptData(sessionKey, data, iv);
+            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = _hybridEncryption.EncryptData(sessionKey, data, iv);
 
             var key = encryptedResult.key;
 
@@ -82,15 +82,6 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
         [Test]
         public void GivenEncryptionKeyBlob_WhenImportingKey_ThenImportsSessionKeyCorrectly()
         {
-            var currentUser = WindowsIdentity.GetCurrent()
-                                             .Name;
-
-            var target = RSAEncryption.LoadSecureContainer("target", currentUser);
-            RSAEncryption.LoadSecureContainer("signatureContainer", currentUser);
-            var targetPublicKey = target.ExportKeyToXML(false);
-
-            HybridEncryption hybridEncryption = HybridEncryption.CreateEncryption(targetPublicKey, "signatureContainer");
-
             RandomNumberGenerator random = new RNGCryptoServiceProvider();
 
             var data = File.ReadAllBytes("appsettings.json");
@@ -100,7 +91,7 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             random.GetBytes(sessionKey);
             random.GetBytes(iv);
 
-            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = hybridEncryption.EncryptData(sessionKey, data, iv);
+            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = _hybridEncryption.EncryptData(sessionKey, data, iv);
 
             var key = encryptedResult.key;
 
@@ -114,16 +105,6 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
         [Test]
         public void GivenEncryptionKeyBlob_WhenImportingKey_ThenDecryptsSessionKeyCorrectly()
         {
-            var currentUser = WindowsIdentity.GetCurrent()
-                                             .Name;
-
-            var target = RSAEncryption.LoadSecureContainer("target", currentUser);
-            RSAEncryption.LoadSecureContainer("signatureContainer", currentUser);
-
-            var targetPublicKey = target.ExportKeyToXML(false);
-
-            HybridEncryption hybridEncryption = HybridEncryption.CreateEncryption(targetPublicKey, "signatureContainer");
-
             RandomNumberGenerator random = new RNGCryptoServiceProvider();
 
             var data = File.ReadAllBytes("appsettings.json");
@@ -133,14 +114,14 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             random.GetBytes(sessionKey);
             random.GetBytes(iv);
 
-            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = hybridEncryption.EncryptData(sessionKey, data, iv);
+            (SessionKeyContainer key, byte[] encryptedData) encryptedResult = _hybridEncryption.EncryptData(sessionKey, data, iv);
 
             var key = encryptedResult.key;
 
             var keyBlob = key.ExportToBlob();
 
             var keyFromBlob = SessionKeyContainer.FromBlob(keyBlob);
-            var rsaEcryption = RSAEncryption.LoadContainer("target");
+            var rsaEcryption = RSAEncryption.LoadContainer(new RSAContainer("encryption"));
 
             var decryptedSessionKey = rsaEcryption.DecryptData(keyFromBlob.SessionKey);
 

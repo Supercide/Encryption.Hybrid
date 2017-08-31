@@ -7,6 +7,7 @@ using System.Security.Cryptography;
 using System.Security.Principal;
 using Encryption.Hybrid.Asymmetric;
 using Encryption.Hybrid.Constants;
+using Encryption.Hybrid.Hybrid;
 using NUnit.Framework;
 
 namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
@@ -40,15 +41,15 @@ namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
         [Test]
         public void GivenUsername_WhenCreatingContainer_ThenOnlyProvidedUserNameHasAccess()
         {
-            var keyContainerName = $"{Guid.NewGuid()}";
+            var container = new RSAContainer($"{Guid.NewGuid()}");
 
-            var rsaEncryption = RSAEncryption.LoadSecureContainer(keyContainerName, User);
+            var rsaEncryption = RSAEncryption.LoadSecureContainer(container, User);
 
             rsaEncryption.ExportKeyToXML(false);
 
-            var container = LoadCspKeyContainerInfo(keyContainerName);
+            var cspContainer = LoadCspKeyContainerInfo(container.Name);
 
-            var rule = container.CryptoKeySecurity.GetAccessRules(true, true, typeof(NTAccount))
+            var rule = cspContainer.CryptoKeySecurity.GetAccessRules(true, true, typeof(NTAccount))
                                 .Cast<AuthorizationRule>()
                                 .SingleOrDefault();
 
@@ -60,13 +61,13 @@ namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
         [Test]
         public void GivenUsername_WhenCreatingContainer_ThenSetsAccessControlToReadOnlyForUser()
         {
-            var containerName = $"{Guid.NewGuid()}";
+            var container = new RSAContainer($"{Guid.NewGuid()}");
 
-            var rsaEncryption = RSAEncryption.LoadSecureContainer(containerName, User);
+            var rsaEncryption = RSAEncryption.LoadSecureContainer(container, User);
 
             var rsaCryptoServiceProvider = new RSACryptoServiceProvider(new CspParameters()
             {
-                KeyContainerName = containerName
+                KeyContainerName = container.Name
             });
 
             rsaEncryption.ExportKeyToXML(false);
