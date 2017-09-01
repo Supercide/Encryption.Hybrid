@@ -17,11 +17,11 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
             var currentUser = WindowsIdentity.GetCurrent()
                                              .Name;
 
-            var signatureContainer = new RSAContainer("signature");
-            var encryptionContainer = new RSAContainer("encryption");
+            var signatureContainer ="signature";
+            var encryptionContainer ="encryption";
 
-            var encryptionKey = RSAEncryption.LoadSecureContainer(encryptionContainer, currentUser);
-            var signingKey = RSAEncryption.LoadSecureContainer(signatureContainer, currentUser);
+            var encryptionKey = RSAEncryption.CreateSecureContainer(encryptionContainer, currentUser);
+            var signingKey = RSAEncryption.CreateSecureContainer(signatureContainer, currentUser);
 
             var signaturePublicKey = signingKey.ExportKeyToXML(false);
             var encryptionPublicKey = encryptionKey.ExportKeyToXML(false);

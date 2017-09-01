@@ -42,11 +42,11 @@ namespace Encryption.Hybrid.Hybrid {
             return decryptedData;
         }
 
-        public static HybridDecryption Create(RSAContainer container, string signiturePublicKey)
+        public static HybridDecryption Create(string containerName, string signaturePublicKey)
         {
-            return new HybridDecryption(RSAEncryption.LoadContainer(container), 
+            return new HybridDecryption(RSAEncryption.LoadContainer(containerName), 
                                         new AESEncryption(), 
-                                        RSAEncryption.FromPublicKey(signiturePublicKey));
+                                        RSAEncryption.CreateWithKey(signaturePublicKey));
         }
 
         private static bool Compare(byte[] array1, byte[] array2)

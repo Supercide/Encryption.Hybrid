@@ -15,10 +15,10 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
             var currentUser = WindowsIdentity.GetCurrent()
                                              .Name;
 
-            var signatureContainer = new RSAContainer("signature");
-            var encryptionContainer = new RSAContainer("encryption");
+            var signatureContainer ="signature";
+            var encryptionContainer = "encryption";
 
-            var encryptionKey = RSAEncryption.LoadSecureContainer(encryptionContainer, currentUser);
+            var encryptionKey = RSAEncryption.CreateSecureContainer(encryptionContainer, currentUser);
             
             var encryptionPublicKey = encryptionKey.ExportKeyToXML(false);
 

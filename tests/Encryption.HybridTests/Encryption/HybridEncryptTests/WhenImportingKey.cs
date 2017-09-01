@@ -11,7 +11,6 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
     public class WhenImportingKey
     {
         private HybridEncryption _hybridEncryption;
-        private HybridDecryption _hybridDecryption;
 
         public WhenImportingKey()
         {
@@ -20,17 +19,14 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             var currentUser = WindowsIdentity.GetCurrent()
                                              .Name;
 
-            var signatureContainer = new RSAContainer("signature");
-            var encryptionContainer = new RSAContainer("encryption");
+            var signatureContainer ="signature";
+            var encryptionContainer ="encryption";
 
-            var encryptionKey = RSAEncryption.LoadSecureContainer(encryptionContainer, currentUser);
-            var signingKey = RSAEncryption.LoadSecureContainer(signatureContainer, currentUser);
+            var encryptionKey = RSAEncryption.CreateSecureContainer(encryptionContainer, currentUser);
 
-            var signaturePublicKey = signingKey.ExportKeyToXML(false);
             var encryptionPublicKey = encryptionKey.ExportKeyToXML(false);
 
             _hybridEncryption = HybridEncryption.Create(encryptionPublicKey, signatureContainer);
-            _hybridDecryption = HybridDecryption.Create(encryptionContainer, signaturePublicKey);
         }
 
         [Test]
@@ -121,7 +117,7 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             var keyBlob = key.ExportToBlob();
 
             var keyFromBlob = SessionKeyContainer.FromBlob(keyBlob);
-            var rsaEcryption = RSAEncryption.LoadContainer(new RSAContainer("encryption"));
+            var rsaEcryption = RSAEncryption.LoadContainer("encryption");
 
             var decryptedSessionKey = rsaEcryption.DecryptData(keyFromBlob.SessionKey);
 

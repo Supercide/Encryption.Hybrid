@@ -29,25 +29,33 @@ namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
         }
 
         [Test]
-        public void GivenValidData_WhenExportingKey_ThenReturnsExportKeyToXML()
+        public void GivenContainerCreatedForOtherUser_WhenLoadingSecureContainer_ThenThrowsException()
         {
-            RSAEncryption encryption = new RSAEncryption();
+            RSAEncryption.CreateSecureContainer("Container", "SYSTEM");
 
-                var rsaExport = encryption.ExportKeyToXML(false);
+            Assert.Throws<Exception>(() => RSAEncryption.LoadContainer("Container"));
+        }
 
-                Assert.That(rsaExport, Is.Not.Null);
+        [Test]
+        public void GivenValidData_WhenExportingKey_ThenReturnsExportedKeyToXML()
+        {
+            RSAEncryption encryption = RSAEncryption.CreateContainer("SomeContainer");
+
+            var rsaExport = encryption.ExportKeyToXML(false);
+
+            Assert.That(rsaExport, Is.Not.Null);
         }
 
         [Test]
         public void GivenUsername_WhenCreatingContainer_ThenOnlyProvidedUserNameHasAccess()
         {
-            var container = new RSAContainer($"{Guid.NewGuid()}");
+            var container =$"{Guid.NewGuid()}";
 
-            var rsaEncryption = RSAEncryption.LoadSecureContainer(container, User);
+            var rsaEncryption = RSAEncryption.CreateSecureContainer(container, User);
 
             rsaEncryption.ExportKeyToXML(false);
 
-            var cspContainer = LoadCspKeyContainerInfo(container.Name);
+            var cspContainer = LoadCspKeyContainerInfo(container);
 
             var rule = cspContainer.CryptoKeySecurity.GetAccessRules(true, true, typeof(NTAccount))
                                 .Cast<AuthorizationRule>()
@@ -61,13 +69,13 @@ namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
         [Test]
         public void GivenUsername_WhenCreatingContainer_ThenSetsAccessControlToReadOnlyForUser()
         {
-            var container = new RSAContainer($"{Guid.NewGuid()}");
+            var container =$"{Guid.NewGuid()}";
 
-            var rsaEncryption = RSAEncryption.LoadSecureContainer(container, User);
+            var rsaEncryption = RSAEncryption.CreateSecureContainer(container, User);
 
             var rsaCryptoServiceProvider = new RSACryptoServiceProvider(new CspParameters()
             {
-                KeyContainerName = container.Name
+                KeyContainerName = container
             });
 
             rsaEncryption.ExportKeyToXML(false);
