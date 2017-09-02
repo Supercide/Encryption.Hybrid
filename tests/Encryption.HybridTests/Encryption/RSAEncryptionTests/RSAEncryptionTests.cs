@@ -5,6 +5,7 @@ using System.Linq;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
 using System.Security.Principal;
+using System.Text;
 using Encryption.Hybrid.Asymmetric;
 using Encryption.Hybrid.Constants;
 using NUnit.Framework;
@@ -28,27 +29,109 @@ namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
         }
 
         [Test]
-        public void GivenValidData_WhenExportingKey_ThenReturnsExportKeyToXML()
+        public void GivenContainerAlreadyExistsForAnotherUser_WhenCreatingContainerWithSameName_ThenThrowsCryptographicException()
         {
-            RSAEncryption encryption = new RSAEncryption();
+            RSAEncryption.CreateSecureContainer("Container", "SYSTEM");
 
-                var rsaExport = encryption.ExportKeyToXML(false);
+            Assert.Throws<CryptographicException>(() => RSAEncryption.CreateContainer("Container"));
+        }
 
-                Assert.That(rsaExport, Is.Not.Null);
+        [Test]
+        public void GivenContainerAlreadyExistsForAnotherUser_WhenLoadingContainerWithSameName_ThenThrowsCryptographicException()
+        {
+            RSAEncryption.CreateSecureContainer("Container", "SYSTEM");
+
+            Assert.Throws<CryptographicException>(() => RSAEncryption.LoadContainer("Container"));
+        }
+
+        [Test]
+        public void GivenContainerAlreadyExistsForCurrentUser_WhenLoadingContainerWithSameName_ThenLoadsContainer()
+        {
+            RSAEncryption.CreateSecureContainer("Container", User);
+
+            Assert.DoesNotThrow(() => RSAEncryption.LoadContainer("Container"));
+        }
+
+        [Test]
+        public void GivenContainerAlreadyExistsForCurrentUser_WhenCreatingContainerWithSameName_ThenLoadsContainer()
+        {
+            RSAEncryption.CreateSecureContainer("Container", User);
+
+            Assert.DoesNotThrow(() => RSAEncryption.CreateContainer("Container"));
+        }
+
+        [Test]
+        public void GivenContainerAlreadyExists_WhenCreatingContainerWithSameName_ThenLoadsContainer()
+        {
+            RSAEncryption.CreateContainer("Container");
+
+            Assert.DoesNotThrow(() => RSAEncryption.CreateContainer("Container"));
+        }
+
+        [Test]
+        public void GivenContainerAlreadyExists_WhenLoadingContainerWithSameName_ThenLoadsContainer()
+        {
+            RSAEncryption.CreateContainer("Container");
+
+            Assert.DoesNotThrow(() => RSAEncryption.LoadContainer("Container"));
+        }
+
+        [Test]
+        public void GivenValidData_WhenExportingKey_ThenReturnsExportedKeyToXML()
+        {
+            RSAEncryption encryption = RSAEncryption.CreateContainer("SomeContainer");
+
+            var rsaExport = encryption.ExportKey(false);
+
+            Assert.That(rsaExport, Is.Not.Null);
+        }
+
+        [Test]
+        public void GivenImportedKey_WhenEncryptingData_ThenEncryptsData_WithImportedKey()
+        {
+            var expectedMessage = "hello world";
+            var expectedMessageBytes = Encoding.UTF8.GetBytes(expectedMessage);
+
+            RSAEncryption originalRSAEncryption = RSAEncryption.CreateContainer("SomeContainer");
+
+            var exportedPublicKey = originalRSAEncryption.ExportKey(false);
+
+            var rsaEncryptionWithImportedKey = RSAEncryption.CreateWithKey(exportedPublicKey);
+
+            var encryptedMessageBytes = rsaEncryptionWithImportedKey.EncryptData(expectedMessageBytes);
+
+            var actualMessage = Encoding.UTF8.GetString(originalRSAEncryption.DecryptData(encryptedMessageBytes));
+
+            Assert.That(actualMessage, Is.EqualTo(expectedMessage));
+        }
+
+        [Test]
+        public void GivenEncryptedData_WhenDecryptingData_ThenDecryptsData()
+        {
+            var expectedMessage = "hello world";
+            var expectedMessageBytes = Encoding.UTF8.GetBytes(expectedMessage);
+
+            RSAEncryption rsaEncryption = RSAEncryption.CreateContainer("SomeContainer");
+
+            var encryptedMessageBytes = rsaEncryption.EncryptData(expectedMessageBytes);
+
+            var actualMessage = Encoding.UTF8.GetString(rsaEncryption.DecryptData(encryptedMessageBytes));
+
+            Assert.That(actualMessage, Is.EqualTo(expectedMessage));
         }
 
         [Test]
         public void GivenUsername_WhenCreatingContainer_ThenOnlyProvidedUserNameHasAccess()
         {
-            var keyContainerName = $"{Guid.NewGuid()}";
+            var container =$"{Guid.NewGuid()}";
 
-            var rsaEncryption = RSAEncryption.LoadSecureContainer(keyContainerName, User);
+            var rsaEncryption = RSAEncryption.CreateSecureContainer(container, User);
 
-            rsaEncryption.ExportKeyToXML(false);
+            rsaEncryption.ExportKey(false);
 
-            var container = LoadCspKeyContainerInfo(keyContainerName);
+            var cspContainer = LoadCspKeyContainerInfo(container);
 
-            var rule = container.CryptoKeySecurity.GetAccessRules(true, true, typeof(NTAccount))
+            var rule = cspContainer.CryptoKeySecurity.GetAccessRules(true, true, typeof(NTAccount))
                                 .Cast<AuthorizationRule>()
                                 .SingleOrDefault();
 
@@ -60,16 +143,16 @@ namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
         [Test]
         public void GivenUsername_WhenCreatingContainer_ThenSetsAccessControlToReadOnlyForUser()
         {
-            var containerName = $"{Guid.NewGuid()}";
+            var container =$"{Guid.NewGuid()}";
 
-            var rsaEncryption = RSAEncryption.LoadSecureContainer(containerName, User);
+            var rsaEncryption = RSAEncryption.CreateSecureContainer(container, User);
 
             var rsaCryptoServiceProvider = new RSACryptoServiceProvider(new CspParameters()
             {
-                KeyContainerName = containerName
+                KeyContainerName = container
             });
 
-            rsaEncryption.ExportKeyToXML(false);
+            rsaEncryption.ExportKey(false);
 
             var path = Path.Combine(WellKnownPaths.RSA_MACHINEKEYS, rsaCryptoServiceProvider.CspKeyContainerInfo.UniqueKeyContainerName);
 
@@ -103,7 +186,7 @@ namespace Encryption.HybridTests.Encryption.RSAEncryptionTests
             return container;
         }
 
-        [OneTimeTearDown]
+        [TearDown]
         public void CleanUp()
         {
             var files = Directory.EnumerateFiles(WellKnownPaths.RSA_MACHINEKEYS);

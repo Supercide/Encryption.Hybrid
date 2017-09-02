@@ -1,72 +1,58 @@
-# master
--
-  branches:
-    only:
-      - master 
+# shared 
+environment:
+  version: 2.0.0
 
-  version: 1.0.0
+skip_tags: true
 
-  skip_tags: true
+build:
+  parallel: true
+  publish_nuget: true
+  verbosity: quiet
 
-  build:
-    parallel: true
-    publish_nuget: true
-    verbosity: quiet
+os: Visual Studio 2017
 
-  os: Visual Studio 2017
+build_script:
+  - ps: $env:BUILD_VERSION = $env:appveyor_build_version
+  - ps: .\build.ps1
 
-  build_script:
-    - ps: $env:BUILD_VERSION = $env:appveyor_build_version
-    - ps: .\build.ps1
+artifacts:
+- path: '**\*.nupkg'
 
-  artifacts:
-  - path: '**\*.nupkg'
-
-  on_failure:
-    - ps: $wc = New-Object 'System.Net.WebClient'
-    - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
-    - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"    
-    
-  on_success:
-    - ps: $wc = New-Object 'System.Net.WebClient'
-    - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
-    - ps: git config --global credential.helper store
-    - ps: git config --global user.email "$($env:Git_Email)"
-    - ps: git config --global user.name "$($env:Git_Username)"
-    - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:Git_Username):$($env:Git_Password)@github.com`n"
-    - ps: git tag $($env:appveyor_build_version) $($env:APPVEYOR_REPO_COMMIT)
-    - git push --tags
-
--
-  branches:
-    except:
-      - master
-
-  version: 1.0.0.{build}-{branch}
-
-  skip_tags: true
-
-  clone_depth: 1
-
-  build:
-    parallel: true
-    publish_nuget: true
-    verbosity: quiet
-
-  build_script:
-    - ps: $env:BUILD_VERSION = $env:appveyor_build_version
-    - ps: .\build.ps1
- 
-  os: Visual Studio 2017
- 
-  artifacts:
-  - path: '**\*.nupkg'
-
-  on_success:
-    - ps: $wc = New-Object 'System.Net.WebClient'
-    - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
-
-  on_failure:
-    - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"    
-    - ps: $wc = New-Object 'System.Net.WebClient'
-    - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+for:
+  -
+    branches:
+      only:
+        - master
+  
+    version: $(version)
+  
+    on_failure:
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+      - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"    
+      
+    on_success:
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+      - ps: git config --global credential.helper store
+      - ps: git config --global user.email "$($env:Git_Email)"
+      - ps: git config --global user.name "$($env:Git_Username)"
+      - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:Git_Username):$($env:Git_Password)@github.com`n"
+      - ps: git tag $($env:appveyor_build_version) $($env:APPVEYOR_REPO_COMMIT)
+      - git push --tags
+  
+  -
+    branches:
+      except:
+        - master
+  
+    version: $(version).{build}-{branch}
+  
+    on_success:
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))
+  
+    on_failure:
+      - ps: Update-AppveyorBuild -Version "$($env:appveyor_build_version)-$(Get-Date -format HHmmss)-failed"    
+      - ps: $wc = New-Object 'System.Net.WebClient'
+      - ps: $wc.UploadFile("https://ci.appveyor.com/api/testresults/xunit/$($env:APPVEYOR_JOB_ID)", (Resolve-Path .\TestResult.xml))

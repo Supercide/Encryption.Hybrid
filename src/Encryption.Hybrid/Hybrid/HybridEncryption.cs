@@ -37,14 +37,11 @@ namespace Encryption.Hybrid.Hybrid {
             return (new SessionKeyContainer(encryptedSessionKey, Iv, hmacHash, signature), encryptedData);
         }
 
-        public static HybridEncryption CreateEncryption(string targetsPublicKey, string signatureContainer)
+        public static HybridEncryption Create(string publicKey, string signatureContainer)
         {
-            return new HybridEncryption(RSAEncryption.FromPublicKey(targetsPublicKey),
+            return new HybridEncryption(RSAEncryption.CreateWithKey(publicKey),
                                         new AESEncryption(), 
                                         RSAEncryption.LoadContainer(signatureContainer));
         }
-        
-
-        
     }
 }

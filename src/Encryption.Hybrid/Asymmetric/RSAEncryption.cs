@@ -7,104 +7,79 @@ namespace Encryption.Hybrid.Asymmetric {
     public class RSAEncryption : IAsymmetricKeyEncryption, IDigitalSignature
     {
         private readonly string _containerName;
-        private readonly string _username;
-        private string _publicKey;
-        
+        private string _key;
 
-        public RSAEncryption() { }
-
-        /// <summary>
-        /// Initializes class from existing container
-        /// </summary>
-        /// <param name="containerName"></param>
-        protected RSAEncryption(string containerName)
+        public string ExportKey(bool includePrivateParameters)
         {
-            _containerName = containerName;
+            RSACryptoServiceProvider rsa = GetCryptoServiceProvider(false, false, _containerName);
+            string xmlString = rsa.ToXmlString(includePrivateParameters);
+            rsa.Clear();
+
+            return xmlString;
         }
 
-        /// <summary>
-        /// Creates or loads an container applying NTFS access rules for the provided user identity
-        /// </summary>
-        /// <param name="containerName"></param>
-        /// <param name="username">NT Identity of users container is restricted too</param>
-        /// <returns><see cref="RSAEncryption"/></returns>
-        protected RSAEncryption(string containerName, string username)
+        private RSACryptoServiceProvider GetCryptoServiceProvider(bool exportable, bool keyMustExist, string containerName)
+        {
+            var csp = GetCspParameters(exportable, keyMustExist, containerName);
+
+            return new RSACryptoServiceProvider(csp);
+        }
+
+        private CspParameters GetCspParameters(bool exportable, bool keyMustExist, string containerName)
+        {
+            CspParameters csp = new CspParameters
+            {
+                KeyContainerName = containerName,
+                KeyNumber = (int) KeyNumber.Exchange,
+            };
+
+            csp.Flags |= CspProviderFlags.UseMachineKeyStore | CspProviderFlags.NoPrompt;
+
+            if(!exportable && !keyMustExist)
+                csp.Flags |= CspProviderFlags.UseNonExportableKey;
+
+            if(keyMustExist)
+                csp.Flags |= CspProviderFlags.UseExistingKey;
+
+            return csp;
+        }
+
+        private RSAEncryption()
+        {
+            
+        }
+        
+        private RSAEncryption(string containerName)
         {
             _containerName = containerName;
-            _username = username;
 
-            RSAContainerFactory.Create(containerName, username)
+            RSAContainerFactory.Create(containerName).Dispose();
+        }
+
+        private RSAEncryption(string containerName, string username)
+        {
+            _containerName = containerName; 
+
+            RSAContainerFactory.Create(_containerName, username)
                                .Dispose();
         }
 
         /// <summary>
-        /// Creates or loads an container applying NTFS access rules for the provided user identity
-        /// </summary>
-        /// <param name="containerName"></param>
-        /// <param name="username">NT Identity of users container is restricted too</param>
-        /// <returns><see cref="RSAEncryption"/></returns>
-        public static RSAEncryption LoadSecureContainer(string containerName, string username)
-        {
-            // throw exception if container already exists
-            return new RSAEncryption(containerName, username);
-        }
-
-        /// <summary>
-        /// Initializes class from existing container or creates a new container if none exists
-        /// </summary>
-        /// <param name="containerName">Name container</param>
-        /// <returns><see cref="RSAEncryption"/></returns>
-        public static RSAEncryption LoadContainer(string containerName)
-        {
-            return new RSAEncryption(containerName);
-        }
-
-        /// <summary>
-        /// initializes class with supplied public key 
-        /// </summary>
-        /// <param name="publicKey">public key in xml format</param>
-        /// <returns><see cref="RSAEncryption"/></returns>
-        public static RSAEncryption FromPublicKey(string publicKey)
-        {
-            return new RSAEncryption
-            {
-                _publicKey = publicKey
-            };
-        }
-
-        /// <summary>
-        /// Exports key to xml format
-        /// </summary>
-        /// <param name="includePrivate">Specifies if it should include private data in the key</param>
-        /// <returns>key in xml format</returns>
-        public string ExportKeyToXML(bool includePrivate)
-        {
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_containerName))
-            {
-                return rsaCryptoServiceProvider.ToXmlString(includePrivate);
-            }
-        }
-
-        /// <summary>
-        /// Encrypts data using the current public key
+        /// Encrypts <paramref name="data"/>data using the current public key
         /// </summary>
         /// <param name="data">byte array of data to encrypt</param>
         /// <returns>returns encrypted data in bytes</returns>
         public byte[] EncryptData(byte[] data)
         {
-            if(_publicKey == null)
+            using (RSACryptoServiceProvider rsa = GetCryptoServiceProvider(false, true, _containerName))
             {
-                using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.Create(_containerName, _username))
-                {
-                    return rsaCryptoServiceProvider.Encrypt(data, RSAEncryptionPadding.Pkcs1);
-                }
-            }
+                if(_key != null)
+                    rsa.FromXmlString(_key);
 
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromPublicKey(_publicKey))
-            {
-                return rsaCryptoServiceProvider.Encrypt(data, RSAEncryptionPadding.Pkcs1);
+                return rsa.Encrypt(data, RSAEncryptionPadding.Pkcs1);
             }
         }
+
         /// <summary>
         /// Decrypts data using the current private key
         /// </summary>
@@ -112,11 +87,15 @@ namespace Encryption.Hybrid.Asymmetric {
         /// <returns>unencrypted data in bytes</returns>
         public byte[] DecryptData(byte[] data)
         {
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_containerName))
+            using (RSACryptoServiceProvider rsa = GetCryptoServiceProvider(false, true, _containerName))
             {
-                return rsaCryptoServiceProvider.Decrypt(data, RSAEncryptionPadding.Pkcs1);
+                if (_key != null)
+                    rsa.FromXmlString(_key);
+
+                return rsa.Decrypt(data, RSAEncryptionPadding.Pkcs1);
             }
         }
+
         /// <summary>
         /// Signs data using the private key
         /// </summary>
@@ -124,11 +103,15 @@ namespace Encryption.Hybrid.Asymmetric {
         /// <returns>signature of data</returns>
         public byte[] SignData(byte[] data)
         {
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromContainer(_containerName))
+            using (RSACryptoServiceProvider rsa = GetCryptoServiceProvider(false, false, _containerName))
             {
-                return rsaCryptoServiceProvider.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                if (_key != null)
+                    rsa.FromXmlString(_key);
+
+                return rsa.SignData(data, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             }
         }
+
         /// <summary>
         /// Verifies the signature using the current public key
         /// </summary>
@@ -137,10 +120,38 @@ namespace Encryption.Hybrid.Asymmetric {
         /// <returns>true if the signature id valid, false if it fails verification</returns>
         public bool VerifyData(byte[] data, byte[] signature)
         {
-            using (RSACryptoServiceProvider rsaCryptoServiceProvider = RSAContainerFactory.CreateFromPublicKey(_publicKey))
+            using (RSACryptoServiceProvider rsa = GetCryptoServiceProvider(false, false, _containerName))
             {
-                return rsaCryptoServiceProvider.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+                if (_key != null)
+                    rsa.FromXmlString(_key);
+
+                return rsa.VerifyData(data, signature, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             }
+        }
+
+        public static RSAEncryption CreateWithKey(string key)
+        {
+            var rsa = new RSAEncryption()
+            {
+                _key = key
+            };
+            
+            return rsa;
+        }
+
+        public static RSAEncryption LoadContainer(string containerName)
+        {
+            return new RSAEncryption(containerName);
+        }
+
+        public static RSAEncryption CreateSecureContainer(string containerName, string windowsIdentity)
+        {
+            return new RSAEncryption(containerName, windowsIdentity);
+        }
+
+        public static RSAEncryption CreateContainer(string containerName)
+        {
+            return new RSAEncryption(containerName);
         }
     }
 }
