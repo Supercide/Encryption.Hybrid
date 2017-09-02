@@ -1,7 +1,11 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using Encryption.Hybrid;
 using Encryption.Hybrid.Asymmetric;
+using Encryption.Hybrid.Constants;
 using Encryption.Hybrid.Hybrid;
 using NUnit.Framework;
 
@@ -11,9 +15,13 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
     {
         private readonly HybridEncryption _hybridEncryption;
         private readonly HybridDecryption _hybridDecryption;
+        private IEnumerable<string> _files;
 
         public WhenDecryptingData()
         {
+            _files = Directory.EnumerateFiles(WellKnownPaths.RSA_MACHINEKEYS)
+                              .ToArray();
+
             var currentUser = WindowsIdentity.GetCurrent()
                                              .Name;
 
@@ -23,8 +31,8 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
             var encryptionKey = RSAEncryption.CreateSecureContainer(encryptionContainer, currentUser);
             var signingKey = RSAEncryption.CreateSecureContainer(signatureContainer, currentUser);
 
-            var signaturePublicKey = signingKey.ExportKeyToXML(false);
-            var encryptionPublicKey = encryptionKey.ExportKeyToXML(false);
+            var signaturePublicKey = signingKey.ExportKey(false);
+            var encryptionPublicKey = encryptionKey.ExportKey(false);
 
             _hybridEncryption = HybridEncryption.Create(encryptionPublicKey, signatureContainer);
             _hybridDecryption = HybridDecryption.Create(encryptionContainer, signaturePublicKey);
@@ -72,6 +80,19 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
             var decryptedData = _hybridDecryption.DecryptData(keyFromBlob, encryptedResult.encryptedData);
 
             Assert.That(decryptedData, Is.EqualTo(data));
+        }
+
+        [OneTimeTearDown]
+        public void CleanUp()
+        {
+            var files = Directory.EnumerateFiles(WellKnownPaths.RSA_MACHINEKEYS);
+
+            var newFiles = files.Except(_files);
+
+            foreach (var newFile in newFiles)
+            {
+                File.Delete(newFile);
+            }
         }
     }
 }

@@ -1,6 +1,10 @@
-﻿using System.Security.Cryptography;
+﻿using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Security.Cryptography;
 using System.Security.Principal;
 using Encryption.Hybrid.Asymmetric;
+using Encryption.Hybrid.Constants;
 using Encryption.Hybrid.Hybrid;
 using NUnit.Framework;
 
@@ -9,9 +13,13 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
     public class WhenEncryptingData
     {
         private readonly HybridEncryption _hybridEncryption;
+        private readonly IEnumerable<string> _files;
 
         public WhenEncryptingData()
         {
+            _files = Directory.EnumerateFiles(WellKnownPaths.RSA_MACHINEKEYS)
+                              .ToArray();
+
             var currentUser = WindowsIdentity.GetCurrent()
                                              .Name;
 
@@ -20,7 +28,7 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
 
             var encryptionKey = RSAEncryption.CreateSecureContainer(encryptionContainer, currentUser);
             
-            var encryptionPublicKey = encryptionKey.ExportKeyToXML(false);
+            var encryptionPublicKey = encryptionKey.ExportKey(false);
 
             _hybridEncryption = HybridEncryption.Create(encryptionPublicKey, signatureContainer);
         }
@@ -95,6 +103,19 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
             var encryptedResult = _hybridEncryption.EncryptData(sessionKey, data, iv);
 
             Assert.That(encryptedResult.key.SessionKey, Is.Not.Empty);
+        }
+
+        [TearDown]
+        public void CleanUp()
+        {
+            var files = Directory.EnumerateFiles(WellKnownPaths.RSA_MACHINEKEYS);
+
+            var newFiles = files.Except(_files);
+
+            foreach (var newFile in newFiles)
+            {
+                File.Delete(newFile);
+            }
         }
     }
 }

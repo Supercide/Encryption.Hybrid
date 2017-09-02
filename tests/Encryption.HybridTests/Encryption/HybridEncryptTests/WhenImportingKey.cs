@@ -1,16 +1,21 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
 using System.Security.Principal;
 using Encryption.Hybrid;
 using Encryption.Hybrid.Asymmetric;
+using Encryption.Hybrid.Constants;
 using Encryption.Hybrid.Hybrid;
 using NUnit.Framework;
 
 namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
     public class WhenImportingKey
     {
-        private HybridEncryption _hybridEncryption;
+        private readonly HybridEncryption _hybridEncryption;
+
+        private readonly IEnumerable<string> _files;
 
         public WhenImportingKey()
         {
@@ -19,12 +24,16 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             var currentUser = WindowsIdentity.GetCurrent()
                                              .Name;
 
+            _files = Directory.EnumerateFiles(WellKnownPaths.RSA_MACHINEKEYS)
+                              .ToArray();
+
+
             var signatureContainer ="signature";
             var encryptionContainer ="encryption";
 
             var encryptionKey = RSAEncryption.CreateSecureContainer(encryptionContainer, currentUser);
 
-            var encryptionPublicKey = encryptionKey.ExportKeyToXML(false);
+            var encryptionPublicKey = encryptionKey.ExportKey(false);
 
             _hybridEncryption = HybridEncryption.Create(encryptionPublicKey, signatureContainer);
         }
@@ -122,6 +131,19 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests {
             var decryptedSessionKey = rsaEcryption.DecryptData(keyFromBlob.SessionKey);
 
             Assert.That(sessionKey, Is.EqualTo(decryptedSessionKey));
+        }
+
+        [TearDown]
+        public void CleanUp()
+        {
+            var files = Directory.EnumerateFiles(WellKnownPaths.RSA_MACHINEKEYS);
+
+            var newFiles = files.Except(_files);
+
+            foreach (var newFile in newFiles)
+            {
+                File.Delete(newFile);
+            }
         }
     }
 }

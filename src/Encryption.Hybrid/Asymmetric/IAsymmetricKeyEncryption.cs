@@ -9,7 +9,7 @@ namespace Encryption.Hybrid.Asymmetric {
         /// </summary>
         /// <param name="includePrivate">Specifies if it should include private data in the key</param>
         /// <returns>key in xml format</returns>
-        string ExportKeyToXML(bool includePrivate);
+        string ExportKey(bool includePrivate);
         /// <summary>
         /// Encrypts data using the current public key
         /// </summary>
