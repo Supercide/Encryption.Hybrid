@@ -1,7 +1,4 @@
-using System;
-using System.IO;
 using System.Security.Cryptography;
-using Encryption.Hybrid.Hybrid;
 
 namespace Encryption.Hybrid.Asymmetric {
     /// <summary>
@@ -10,7 +7,7 @@ namespace Encryption.Hybrid.Asymmetric {
     public class RSAEncryption : IAsymmetricKeyEncryption, IDigitalSignature
     {
         private readonly string _containerName;
-        public string _key;
+        private string _key;
 
         public string ExportKey(bool includePrivateParameters)
         {
@@ -47,28 +44,19 @@ namespace Encryption.Hybrid.Asymmetric {
             return csp;
         }
 
-        protected RSAEncryption()
+        private RSAEncryption()
         {
             
         }
-        /// <summary>
-        /// Initializes class from existing <paramref name="containerName"/>
-        /// </summary>
-        /// <param name="containerName"></param>
-        protected RSAEncryption(string containerName)
+        
+        private RSAEncryption(string containerName)
         {
             _containerName = containerName;
 
             RSAContainerFactory.Create(containerName).Dispose();
         }
 
-        /// <summary>
-        /// Creates or loads an <paramref name="containerName"/> applying NTFS access rules for the provided user identity
-        /// </summary>
-        /// <param name="containerName"></param>
-        /// <param name="username">NT Identity of users containerName is restricted too</param>
-        /// <returns><see cref="RSAEncryption"/></returns>
-        public RSAEncryption(string containerName, string username)
+        private RSAEncryption(string containerName, string username)
         {
             _containerName = containerName; 
 

@@ -8,7 +8,6 @@ using System.Security.Principal;
 using System.Text;
 using Encryption.Hybrid.Asymmetric;
 using Encryption.Hybrid.Constants;
-using Encryption.Hybrid.Hybrid;
 using NUnit.Framework;
 
 namespace Encryption.HybridTests.Encryption.RSAEncryptionTests

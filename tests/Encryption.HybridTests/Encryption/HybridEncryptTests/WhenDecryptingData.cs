@@ -15,7 +15,7 @@ namespace Encryption.HybridTests.Encryption.HybridEncryptTests
     {
         private readonly HybridEncryption _hybridEncryption;
         private readonly HybridDecryption _hybridDecryption;
-        private IEnumerable<string> _files;
+        private readonly IEnumerable<string> _files;
 
         public WhenDecryptingData()
         {
